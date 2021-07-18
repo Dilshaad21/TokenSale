@@ -12,8 +12,14 @@ contract DappToken{
         address indexed _to, 
         uint256 _value
     );
-    
+    event Approval(
+        address indexed _owner, 
+        address indexed _spender, 
+        uint256 _value
+    );
+
     mapping(address => uint256) public balanceOf;
+    mapping(address => mapping(address => uint256)) public allowance;
 
     constructor(uint256 _initialSupply) public{
         // First account which deplyed contract
@@ -27,8 +33,36 @@ contract DappToken{
 
         balanceOf[msg.sender] -= _value;
         balanceOf[_to] += _value;
-
+        
         emit Transfer(msg.sender, _to, _value);
         return true;
+    }
+
+    // Deletegated Transfer
+
+    //Give the approval for that many _value as per the allowance
+    function approve(address _spender, uint256 _value) public returns (bool success){
+        //allowance 
+        allowance[msg.sender][_spender] = _value;
+        
+        //approve event
+        emit Approval(msg.sender, _spender, _value);
+        return true;
+    }
+
+    function transferFrom(address _from, address _to, uint256 _value) public returns (bool success){
+        // Check if from has enough balance
+        require(_value <= balanceOf[_from]);
+        require(_value <= allowance[_from][msg.sender]);
+
+        balanceOf[_from]-= _value;
+        balanceOf[_to]+=_value;
+
+        // decrease the spender's allowance by value
+        allowance[_from][msg.sender] -= _value;
+
+        emit Transfer(_from, _to, _value);
+        return true;
+        //
     }
 }
